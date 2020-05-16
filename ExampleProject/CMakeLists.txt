@@ -33,17 +33,23 @@ target_link_libraries(main PRIVATE libglew_static)
 add_subdirectory(lib/glm EXCLUDE_FROM_ALL)
 target_link_libraries(main PRIVATE glm)
 
+set(DLL_DIR "linux")
+
 if(WIN32)
-  set(WIN_ARCH "Win64")
+  set(DLL_DIR "Win64")
   if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
-    set(WIN_ARCH "Win32")
+    set(DLL_DIR "Win32")
   endif()
-  set(HOLOPLAY_CORE_DLL_LOCATION "${HOLOPLAY_CORE_BASE_PATH}/dylib/${WIN_ARCH}/HoloPlayCore.dll")
+  set(HOLOPLAY_CORE_DLL_LOCATION "${HOLOPLAY_CORE_BASE_PATH}/dylib/${DLL_DIR}/HoloPlayCore.dll")
   add_custom_command(TARGET main POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${HOLOPLAY_CORE_DLL_LOCATION}" $<TARGET_FILE_DIR:main>)
 endif(WIN32)
 
+if(APPLE)
+  set(DLL_DIR "macos")
+endif(APPLE)
+
 # holoplaycore
 target_include_directories(main PRIVATE "${HOLOPLAY_CORE_BASE_PATH}/include")
-find_library(HOLOPLAY_CORE_LOCATION HoloPlayCore PATHS "${HOLOPLAY_CORE_BASE_PATH}/dylib" PATH_SUFFIXES "linux" "macos" ${WIN_ARCH})
+find_library(HOLOPLAY_CORE_LOCATION HoloPlayCore PATHS "${HOLOPLAY_CORE_BASE_PATH}/dylib" PATH_SUFFIXES ${DLL_DIR})
 target_link_libraries(main PRIVATE ${HOLOPLAY_CORE_LOCATION})
 
