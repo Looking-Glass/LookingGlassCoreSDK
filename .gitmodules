@@ -1,0 +1,9 @@
+[submodule "ExampleProject/lib/glew"]
+	path = ExampleProject/lib/glew
+	url = https://github.com/omniavinco/glew-cmake.git
+[submodule "ExampleProject/lib/glm"]
+	path = ExampleProject/lib/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "ExampleProject/lib/glfw"]
+	path = ExampleProject/lib/glfw
+	url = https://github.com/glfw/glfw.git

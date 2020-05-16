@@ -1,0 +1,10 @@
+[Bb]uilds/
+[Bb]uild/
+.vscode
+*.swp
+
+##### MacOS
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
