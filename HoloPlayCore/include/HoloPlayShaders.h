@@ -1,5 +1,5 @@
 /*
-    HoloPlayCore 0.1.0
+    HoloPlayCore 0.1.1
 
     include/HoloPlayShaders.h
 
@@ -14,6 +14,13 @@
     and must be queried using functions declared in HoloPlayCore.h. The second set
     (quilt settings) must be provided by the developer and depends on the desired
     resolution of their multiview render.
+	
+    By using, copying, or modifying this code in any way, you agree to the terms of
+    https://github.com/Looking-Glass/HoloPlayCoreSDK/blob/master/LICENSE.txt
+
+    The contents of this file are not open source and should not be merged into
+    codebases with licenses that conflict with the HoloPlay SDK License. In those
+    cases, please include HoloPlayShadersOpen.h instead.
 */
 
 static const char* hpc_LightfieldVertShaderGLSL = "\

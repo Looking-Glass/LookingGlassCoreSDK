@@ -1,5 +1,5 @@
 /*
-    HoloPlayCore 0.1.0
+    HoloPlayCore 0.1.1
 
     Intended for use with HoloPlay Service 1.0.1 and above.
 
@@ -20,10 +20,27 @@
     they are provided for developer convenience and simple cross-language binding of functions
     that might return structs or opaque object pointers. For insight on how these work under the 
     hood and more direct access to the data they provide, see that file.
+	    
+    Copyright 2020 Looking Glass Factory
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+    and associated documentation files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all copies or
+    substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+    BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 */
 
-#ifndef _HOLOPLAY_CORE_H
-#define _HOLOPLAY_CORE_H
+
 #ifndef IMPORT_DECL
 #ifdef _WIN32
 #define IMPORT_DECL __declspec(dllimport)
@@ -281,7 +298,6 @@ extern "C"
          Returns: display subpixel size.
     */
     IMPORT_DECL float hpc_GetDevicePropertySubp(int dev_index);
-#endif
 #ifdef __cplusplus
 }
 #endif

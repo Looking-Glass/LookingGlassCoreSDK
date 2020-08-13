@@ -1,5 +1,5 @@
 /*
-    HoloPlayCore 0.1.0
+    HoloPlayCore 0.1.1
 
     Intended for use with HoloPlay Service 1.0.1 and above.
 
@@ -18,6 +18,23 @@
     high- level languages.
 
      Convenience functions that implement these under the hood are declared in HoloPlayCore.h.
+	 
+	Copyright 2020 Looking Glass Factory
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+    and associated documentation files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all copies or
+    substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+    BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #ifdef __cplusplus
@@ -49,16 +66,16 @@ extern "C"
     */
     typedef enum _hpc_client_error
     {
-        hpc_CLIERR_NOERROR,
-        hpc_CLIERR_NOSERVICE,
-        hpc_CLIERR_VERSIONERR,
-        hpc_CLIERR_SERIALIZEERR,
-        hpc_CLIERR_DESERIALIZEERR,
-        hpc_CLIERR_MSGTOOBIG,
-        hpc_CLIERR_SENDTIMEOUT,
-        hpc_CLIERR_RECVTIMEOUT,
-        hpc_CLIERR_PIPEERROR,
-        hpc_CLIERR_APPNOTINITIALIZED
+        hpc_CLIERR_NOERROR,            // no error, everything ok
+        hpc_CLIERR_NOSERVICE,          // HoloPlay Service not installed or not running
+        hpc_CLIERR_VERSIONERR,         // HoloPlay Service / HoloPlay Core version mismatch
+        hpc_CLIERR_SERIALIZEERR,       // Something wrong with serilization of message data being sent to HoloPlay Service
+        hpc_CLIERR_DESERIALIZEERR,     // Something wrong with serilization of message data being received from HoloPlay Service 
+        hpc_CLIERR_MSGTOOBIG,          // Message sent was too large and was rejected
+        hpc_CLIERR_SENDTIMEOUT,        // HoloPlay Service was detected but did not consume message
+        hpc_CLIERR_RECVTIMEOUT,        // HoloPlay Service received message but did not respond
+        hpc_CLIERR_PIPEERROR,          // Some other problem with communication
+        hpc_CLIERR_APPNOTINITIALIZED   // hpc_RefreshState called before hpc_InitializeApp
     } hpc_client_error;
 
     /*
@@ -75,14 +92,15 @@ extern "C"
     */
     typedef enum _hpc_service_error
     {
-        hpc_ERR_NOERROR,
-        hpc_ERR_BADCBOR,
-        hpc_ERR_BADCOMMAND,
-        hpc_ERR_NOIMAGE,
-        hpc_ERR_LKGNOTFOUND,
-        hpc_ERR_NOTINCACHE,
-        hpc_ERR_INITTOOLATE,
-        hpc_ERR_NOTALLOWED,
+        hpc_ERR_NOERROR,               // no error, everything ok
+        hpc_ERR_BADCBOR,               // HoloPlay Service could not deserialize message as sent
+        hpc_ERR_BADCOMMAND,            // Message as parsed is invalid or not allowed
+        hpc_ERR_NOIMAGE,               // HoloPlay Service expected image data in the message but did not receive any
+        hpc_ERR_LKGNOTFOUND,           // Command refers to a Looking Glass that isn't connected
+        hpc_ERR_NOTINCACHE,            // Command requested that HoloPlay Service load a cached quilt image that doesn't exist
+        hpc_ERR_INITTOOLATE,           // App tried to initialize with appid after it had already sent messages
+        hpc_ERR_NOTALLOWED,            // Action requested by command isn't allowed for some other reason
+        hpc_ERR_INTERNAL1              // Don't worry about this one :)
     } hpc_service_error;
 
     /*
