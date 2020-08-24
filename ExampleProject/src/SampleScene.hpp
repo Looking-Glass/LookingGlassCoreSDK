@@ -20,9 +20,9 @@ public:
 
 protected:
   virtual void update();
-  virtual void OnExit();
+  virtual void onExit();
   virtual void renderScene();
-  virtual glm::mat4 GetViewMatrixOfCurrentFrame();
+  virtual glm::mat4 getViewMatrixOfCurrentFrame();
   virtual bool processInput(GLFWwindow *window);
 
   ShaderProgram *shaderProgram;

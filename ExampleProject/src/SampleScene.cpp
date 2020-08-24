@@ -269,13 +269,15 @@ void SampleScene::update()
   // add your updates for each frame here
 }
 
-void SampleScene::OnExit()
+void SampleScene::onExit()
 {
-  // TODO : there's gotta be more stuff to dealloc here
+  glDeleteVertexArrays(1, &vao);
+  glDeleteBuffers(1, &vbo);
+  glDeleteBuffers(1, &ibo);
   delete shaderProgram;
 }
 
-glm::mat4 SampleScene::GetViewMatrixOfCurrentFrame()
+glm::mat4 SampleScene::getViewMatrixOfCurrentFrame()
 {
   return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 }
@@ -295,7 +297,6 @@ void SampleScene::renderScene()
 
   // holoplay special camera setup for each view, don't delete
   shaderProgram->setUniform("view", GetViewMatrixOfCurrentView());
-
   shaderProgram->setUniform("projection", GetProjectionMatrixOfCurrentView());
   glCheckError(__FILE__, __LINE__);
 

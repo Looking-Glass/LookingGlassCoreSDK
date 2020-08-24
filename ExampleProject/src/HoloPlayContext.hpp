@@ -47,11 +47,11 @@ public:
     bool windowDimensionChanged();
 
     // functions that should be overrieded in the child class
-    virtual void OnExit();
+    virtual void onExit();
     virtual void update();      // update function that will run every frame
     virtual void renderScene(); // render scene here
     virtual glm::mat4
-    GetViewMatrixOfCurrentFrame();                 // define how view matrix gets updated each
+    getViewMatrixOfCurrentFrame();                 // define how view matrix gets updated each
                                                    // frame here. projection matrix is not
                                                    // changeable because the field of view is
                                                    // static according to hardware measurement

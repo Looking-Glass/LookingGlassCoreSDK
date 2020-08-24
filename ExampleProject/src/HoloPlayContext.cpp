@@ -147,7 +147,7 @@ HoloPlayContext::HoloPlayContext()
   initialize();
 }
 
-void HoloPlayContext::OnExit()
+void HoloPlayContext::onExit()
 {
   cout << "[INFO] : on exit" << endl;
 }
@@ -195,12 +195,12 @@ void HoloPlayContext::run()
     if (!processInput(window))
     {
       exit();
-      OnExit();
+      onExit();
       continue;
     }
 
     // decide how camera updates here, override in SampleScene.cpp
-    glm::mat4 currentViewMatrix = GetViewMatrixOfCurrentFrame();
+    glm::mat4 currentViewMatrix = getViewMatrixOfCurrentFrame();
     glCheckError(__FILE__, __LINE__);
 
     // do the update
@@ -307,7 +307,7 @@ void HoloPlayContext::renderScene()
   cout << "[INFO] : render scene" << endl;
 }
 
-glm::mat4 HoloPlayContext::GetViewMatrixOfCurrentFrame()
+glm::mat4 HoloPlayContext::getViewMatrixOfCurrentFrame()
 {
   cout << "[INFO] : update camera" << endl;
   return glm::mat4(1.0);
@@ -772,8 +772,9 @@ void HoloPlayContext::setupVirtualCameraForView(int currentViewIndex,
       tan(offsetAngle); // calculate the offset that the camera should move
 
   // modify the view matrix (position)
-  viewMatrix = glm::translate(currentViewMatrix,
-                              glm::vec3(offset, 0.0f, cameraDistance));
+  // determine the local direction of the offset using currentViewMatrix and translate
+  glm::vec3 offsetLocal = glm::vec3(currentViewMatrix * glm::vec4(offset, 0.0f, cameraDistance, 1.0f));
+  viewMatrix = glm::translate(currentViewMatrix, offsetLocal);
 
   float aspectRatio = getWindowRatio();
 
