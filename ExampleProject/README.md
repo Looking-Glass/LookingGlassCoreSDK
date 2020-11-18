@@ -256,8 +256,8 @@ If you want to further understand how these equations work, check out [Offset](h
 
 ## More References
   - [How the Looking Glass Works](https://docs.lookingglassfactory.com/Appendix/how-it-works/)
-  - More about [Quilts](https://docs.lookingglassfactory.com/HoloPlayCore/guides/quilt/)
-  - More about [Camera Setup](https://docs.lookingglassfactory.com/HoloPlayCore/guides/camera/)
+  - More about [Quilts](https://docs.lookingglassfactory.com/HoloPlayCore/HoloPlayCore-SDK/guides/quilt/)
+  - More about [Camera Setup](https://docs.lookingglassfactory.com/HoloPlayCore/HoloPlayCore-SDK/guides/camera/)
 
 
 # Project Structure
