@@ -5,6 +5,11 @@
  * Licence:
  *      * MIT
  */
+
+#ifdef WIN32
+#pragma warning(disable : 4464 4820 4514 5045 4201 5039 4061 4710 4458 4626 5027)
+#endif
+
 #include "SampleScene.hpp"
 
 #include <GLFW/glfw3.h>
@@ -15,6 +20,12 @@
 
 #include "glError.hpp"
 
+#ifdef _DEBUG
+static const bool capture_mouse = false;
+#else
+static const bool capture_mouse = true;
+#endif
+
 struct VertexType
 {
   glm::vec3 position;
@@ -24,7 +35,7 @@ struct VertexType
 
 float heightMap(const glm::vec2 position)
 {
-  return 2.0 * sin(position.x) * sin(position.y);
+  return float(2.0 * sin(position.x) * sin(position.y));
 }
 
 VertexType getHeightMap(const glm::vec2 position)
@@ -40,12 +51,12 @@ VertexType getHeightMap(const glm::vec2 position)
   v.position = glm::vec3(position, h);
   v.normal = glm::normalize(glm::vec3(-hx, -hy, 1.0));
 
-  float c = sin(h * 5.f) * 0.5 + 0.5;
+  float c = float(sin(h * 5.f) * 0.5 + 0.5);
   v.color = glm::vec4(c, 1.0 - c, 1.0, 1.0);
   return v;
 }
 
-SampleScene::SampleScene() : HoloPlayContext()
+SampleScene::SampleScene() : HoloPlayContext(capture_mouse)
 {
   glCheckError(__FILE__, __LINE__);
 
@@ -53,16 +64,16 @@ SampleScene::SampleScene() : HoloPlayContext()
   std::vector<VertexType> vertices;
   std::vector<GLuint> index;
 
-  for (int y = 0; y <= size; ++y)
-    for (int x = 0; x <= size; ++x)
+  for (unsigned int y = 0; y <= size; ++y)
+    for (unsigned int x = 0; x <= size; ++x)
     {
-      float xx = (x - size / 2) * 0.1f;
-      float yy = (y - size / 2) * 0.1f;
+      float xx = (float(x) - float(size) / 2.0f) * 0.1f;
+      float yy = (float(y) - float(size) / 2.0f) * 0.1f;
       vertices.push_back(getHeightMap({xx, yy}));
     }
 
-  for (int y = 0; y < size; ++y)
-    for (int x = 0; x < size; ++x)
+  for (unsigned int y = 0; y < size; ++y)
+    for (unsigned int x = 0; x < size; ++x)
     {
       index.push_back((x + 0) + (size + 1) * (y + 0));
       index.push_back((x + 1) + (size + 1) * (y + 0));
@@ -81,14 +92,14 @@ SampleScene::SampleScene() : HoloPlayContext()
   // vbo
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VertexType),
+  glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vertices.size() * sizeof(VertexType)),
                vertices.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   // ibo
   glGenBuffers(1, &ibo);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof(GLuint),
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(index.size() * sizeof(GLuint)),
                index.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -121,9 +132,7 @@ SampleScene::SampleScene() : HoloPlayContext()
         float diffus = 0.7*max(0.0,dot(n,l));
         float specular = 0.6*pow(max(0.0,-dot(r,l)),4.0);
 
-        color = fColor * ( ambient + diffus + specular );
-
-      /*color = vec3(1,0,0);*/
+        color = vec4(ambient + fColor.xyz * diffus + specular, fColor.w);
     }
   )--";
   const char *vertexShaderSource = R"--(
@@ -213,20 +222,21 @@ bool SampleScene::processInput(GLFWwindow *window)
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
-void SampleScene::mouse_callback(GLFWwindow *window, double xpos, double ypos)
+void SampleScene::mouse_callback(GLFWwindow*, double xpos, double ypos)
 {
   if (firstMouse)
   {
-    lastX = xpos;
-    lastY = ypos;
+    lastX = float(xpos);
+    lastY = float(ypos);
     firstMouse = false;
   }
 
-  float xoffset = xpos - lastX;
+  float xoffset = float(xpos) - lastX;
   float yoffset =
-      lastY - ypos; // reversed since y-coordinates go from bottom to top
-  lastX = xpos;
-  lastY = ypos;
+      lastY - float(ypos); // reversed since y-coordinates go from bottom to top
+
+  lastX = float(xpos);
+  lastY = float(ypos);
 
   float sensitivity = 0.01f; // change this value to your liking
   xoffset *= -sensitivity;
@@ -249,15 +259,15 @@ void SampleScene::mouse_callback(GLFWwindow *window, double xpos, double ypos)
 }
 
 // mouse scroll feed back
-void SampleScene::scroll_callback(GLFWwindow *window,
-                                  double xoffset,
+void SampleScene::scroll_callback(GLFWwindow*,
+                                  double,
                                   double yoffset)
 {
   // here we implement zoom in and zoom out control
   const float MAX_SIZE = 10; // for example
   const float MIN_SIZE = 1;  // for example
   if (cameraSize >= MIN_SIZE && cameraSize <= MAX_SIZE)
-    cameraSize -= yoffset;
+    cameraSize -= float(yoffset);
   if (cameraSize <= MIN_SIZE)
     cameraSize = MIN_SIZE;
   if (cameraSize >= MAX_SIZE)
@@ -288,7 +298,8 @@ void SampleScene::renderScene()
 
   // clear
   glClear(GL_COLOR_BUFFER_BIT);
-  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glCheckError(__FILE__, __LINE__);
 
@@ -307,7 +318,7 @@ void SampleScene::renderScene()
 
   glCheckError(__FILE__, __LINE__);
   glDrawElements(GL_TRIANGLES,        // mode
-                 size * size * 2 * 3, // count
+                 GLsizei(size * size * 2 * 3), // count
                  GL_UNSIGNED_INT,     // type
                  NULL                 // element array buffer offset
   );

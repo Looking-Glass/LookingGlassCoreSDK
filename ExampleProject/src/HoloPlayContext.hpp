@@ -23,7 +23,8 @@ struct hpc_Uniforms_t;
 class HoloPlayContext
 {
 public:
-    HoloPlayContext();
+    HoloPlayContext(bool capture_mouse = true);
+    virtual ~HoloPlayContext();
 
     static HoloPlayContext &getInstance();
 
@@ -62,11 +63,11 @@ public:
                                  double yoffset);
 
 private:
-    enum State
+    enum class State
     {
-        stateReady,
-        stateRun,
-        stateExit
+        Ready,
+        Run,
+        Exit
     };
 
     State state;
@@ -154,14 +155,6 @@ protected:
     void loadCalibrationIntoShader(); // assign calibration to light-field shader
                                       // uniforms
     void loadLightFieldShaders();     // create and compile light-field shader
-    void loadBlitShaders();           // create and comiple blit shader
-
-    // create view texture, framebuffer and texture color buffer, render buffer
-    // object and will output the bound handlers
-    void setupViewTextureAndFrameBuffer(unsigned int &viewTexture,
-                                        unsigned int &framebuffer,
-                                        unsigned int &textureColorbuffer,
-                                        unsigned int &rbo);
 
     // release function
     void release(); // Destroys / releases all buffers and objects creating
@@ -176,9 +169,7 @@ protected:
     void drawLightField();          // Uses the lightfieldShader program,
                                     // binds the quiltTexture, and draws a fullscreen
                                     // quad. Call this after all the views have been
-                                    // copied into quiltTexture using copyViewIntoQuilt().
-    void copyViewToQuilt(int view); // Copies the currently bound glTexture to
-                                    // the specified view on the quilt
+                                    // rendered.
 
     // holoplay core related helper functions
     bool

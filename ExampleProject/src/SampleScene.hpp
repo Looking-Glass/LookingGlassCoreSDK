@@ -28,7 +28,7 @@ protected:
   ShaderProgram *shaderProgram;
 
 private:
-  const int size = 100;
+  const unsigned int size = 100;
 
   // VBO/VAO/ibo
   GLuint vao, vbo, ibo;

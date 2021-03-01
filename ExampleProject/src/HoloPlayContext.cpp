@@ -6,6 +6,10 @@
  *      * MIT
  */
 
+#ifdef WIN32
+#pragma warning(disable : 4464 4820 4514 5045 4201 5039 4061 4710)
+#endif
+
 #include "HoloPlayContext.hpp"
 #include "HoloPlayShaders.h"
 
@@ -20,6 +24,8 @@
 #include "glError.hpp"
 
 using namespace std;
+
+#define UNUSED(x) [&x]{}()
 
 HoloPlayContext *currentApplication = NULL;
 
@@ -62,8 +68,8 @@ static void external_scroll_callback(GLFWwindow *window,
   getInstance().scroll_callback(window, xpos, ypos);
 }
 
-HoloPlayContext::HoloPlayContext()
-    : state(stateReady),
+HoloPlayContext::HoloPlayContext(bool capture_mouse)
+    : state(State::Ready),
       title("Application"),
       opengl_version_major(3),
       opengl_version_minor(3)
@@ -74,7 +80,7 @@ HoloPlayContext::HoloPlayContext()
   if (!GetLookingGlassInfo())
   {
     cout << "[Info] HoloplayCore Message Pipe tear down" << endl;
-    state = stateExit;
+    state = State::Exit;
     // must tear down the message pipe before shut down the app
     hpc_TeardownMessagePipe();
     throw std::runtime_error("Couldn't find looking glass");
@@ -117,8 +123,13 @@ HoloPlayContext::HoloPlayContext()
   // set up the cursor callback
   glfwSetCursorPosCallback(window, external_mouse_callback);
   glfwSetScrollCallback(window, external_scroll_callback);
-  // tell GLFW to capture our mouse
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+  if (capture_mouse)
+  {
+      // tell GLFW to capture our mouse
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  }
+
   glCheckError(__FILE__, __LINE__);
 
   glewExperimental = GL_TRUE;
@@ -147,6 +158,10 @@ HoloPlayContext::HoloPlayContext()
   initialize();
 }
 
+HoloPlayContext::~HoloPlayContext()
+{
+}
+
 void HoloPlayContext::onExit()
 {
   cout << "[INFO] : on exit" << endl;
@@ -154,7 +169,7 @@ void HoloPlayContext::onExit()
 
 void HoloPlayContext::exit()
 {
-  state = stateExit;
+  state = State::Exit;
   cout << "[Info] Informing Holoplay Core to close app" << endl;
   hpc_CloseApp();
   // release all the objects created for setting up the HoloPlay Context
@@ -164,26 +179,17 @@ void HoloPlayContext::exit()
 // main loop
 void HoloPlayContext::run()
 {
-  state = stateRun;
+  state = State::Run;
 
   // Make the window's context current
   glfwMakeContextCurrent(window);
 
-  time = glfwGetTime();
+  time = float(glfwGetTime());
 
-  // create a viewTex for rendering
-  unsigned int viewTex;
-  // create framebuffer and texture color buffer
-  unsigned int framebuffer, textureColorbuffer;
-  // create a renderbuffer object for depth and stencil attachment
-  unsigned int rbo;
-  // set up all related objects for saving a single view here
-  setupViewTextureAndFrameBuffer(viewTex, framebuffer, textureColorbuffer, rbo);
-
-  while (state == stateRun)
+  while (state == State::Run)
   {
     // compute new time and delta time
-    float t = glfwGetTime();
+    float t = float(glfwGetTime());
     deltaTime = t - time;
     time = t;
 
@@ -206,70 +212,61 @@ void HoloPlayContext::run()
     // do the update
     update();
 
+    // clear backbuffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+
+    // bind quilt texture to frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+    // save the viewport for the total quilt
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    // get quilt view dimensions
+    int qs_viewWidth = int(float(qs_width) / float(qs_columns));
+    int qs_viewHeight = int(float(qs_height) / float(qs_rows));
+
     // render views and copy each view to the quilt
     for (int viewIndex = 0; viewIndex < qs_totalViews; viewIndex++)
     {
-      // 1. bind to framebuffer and draw scene as we normally would to color texture
-      glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-      glCheckError(__FILE__, __LINE__);
-      glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering texture)
-      glCheckError(__FILE__, __LINE__);
+        // get the x and y origin for this view
+        int x = (viewIndex % qs_columns) * qs_viewWidth;
+        int y = int(float(viewIndex) / float(qs_columns)) * qs_viewHeight;
 
-      // 2. accept fragment if it closer to the camera than the former one
-      glDepthFunc(GL_LESS);
-      glCheckError(__FILE__, __LINE__);
+        // set the viewport to the view to control the projection extent
+        glViewport(x, y, qs_viewWidth, qs_viewHeight);
 
-      // 3. make sure we clear the framebuffer's content
-      glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glCheckError(__FILE__, __LINE__);
+        // set the scissor to the view to restrict calls like glClear from making modifications
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(x, y, qs_viewWidth, qs_viewHeight);
 
-      // 4. set up the camera rotation and position for current view
-      setupVirtualCameraForView(viewIndex, currentViewMatrix);
-      glCheckError(__FILE__, __LINE__);
+        // set up the camera rotation and position for current view
+        setupVirtualCameraForView(viewIndex, currentViewMatrix);
 
-      // 5. render the scene according to the view
-      renderScene();
+        //render the scene according to the view
+        renderScene();
 
-      // 6. now bind back to default framebuffer
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // reset viewport
+        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
-      // 7. disbale the depth and clear color before rendering view texture
-      // -----------------------------------------------------------------
-      glDisable(GL_DEPTH_TEST); // disable depth test so texture isn't
-                                // discarded due to depth test.
-      // set clear color to white (not really necessary actually,
-      // since we won't be able to see behind the texture anyways)
-      glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-      // clear all relevant buffers
-      glClear(GL_COLOR_BUFFER_BIT);
-
-      // 8. now render on view texture
-      glBindVertexArray(viewTex);
-      glBindTexture(GL_TEXTURE_2D,
-                    textureColorbuffer); // use the color attachment texture as
-                                         // the texture
-      glCheckError(__FILE__, __LINE__);
-
-      // 9. copy current view texture to the responding view grid in quilt
-      copyViewToQuilt(viewIndex);
-      glCheckError(__FILE__, __LINE__);
+        // restore scissor
+        glDisable(GL_SCISSOR_TEST);
+        glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
     }
+
+    // reset framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // draw the light field image
     drawLightField();
 
     // Swap Front and Back buffers (double buffering)
     glfwSwapBuffers(window);
+
     // Poll and process events
     glfwPollEvents();
   }
-
-  // clean up objects created for saving and transferring single view
-  glDeleteFramebuffers(1, &framebuffer);
-  glDeleteTextures(1, &textureColorbuffer);
-  glDeleteRenderbuffers(1, &rbo);
-  glDeleteTextures(1, &viewTex);
 
   glfwTerminate();
 }
@@ -316,7 +313,7 @@ glm::mat4 HoloPlayContext::getViewMatrixOfCurrentFrame()
 // process all input: query GLFW whether relevant keys are pressed/released this
 // frame and react accordingly. return false to close application
 // ---------------------------------------------------------------------------------------------------------
-bool HoloPlayContext::processInput(GLFWwindow *window)
+bool HoloPlayContext::processInput(GLFWwindow*)
 {
   cout << "[INFO] : process input" << endl;
   return true;
@@ -324,13 +321,21 @@ bool HoloPlayContext::processInput(GLFWwindow *window)
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
-void HoloPlayContext::mouse_callback(GLFWwindow *window,
+void HoloPlayContext::mouse_callback(GLFWwindow*,
                                      double xpos,
-                                     double ypos) {}
+                                     double ypos) 
+{
+    UNUSED(xpos);
+    UNUSED(ypos);
+}
 
-void HoloPlayContext::scroll_callback(GLFWwindow *window,
+void HoloPlayContext::scroll_callback(GLFWwindow*,
                                       double xoffset,
-                                      double yoffset) {}
+                                      double yoffset) 
+{
+    UNUSED(xoffset);
+    UNUSED(yoffset);
+}
 
 // get functions
 // =========================================================
@@ -459,9 +464,6 @@ void HoloPlayContext::initialize()
   cout << "[Info] initializing" << endl;
   glfwMakeContextCurrent(window);
 
-  loadBlitShaders();
-  glCheckError(__FILE__, __LINE__);
-
   loadLightFieldShaders();
   glCheckError(__FILE__, __LINE__);
 
@@ -521,8 +523,8 @@ void HoloPlayContext::passQuiltSettingsToShader()
   int qs_viewHeight = qs_height / qs_rows;
 
   lightFieldShader->setUniform(
-      "viewPortion", glm::vec2(qs_viewWidth * qs_columns / (float)qs_width,
-                               qs_viewHeight * qs_rows / (float)qs_height));
+      "viewPortion", glm::vec2(float(qs_viewWidth * qs_columns) / float(qs_width),
+                               float(qs_viewHeight * qs_rows) / float(qs_height)));
   glCheckError(__FILE__, __LINE__);
   lightFieldShader->unuse();
 }
@@ -590,38 +592,6 @@ void HoloPlayContext::setupQuilt()
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void HoloPlayContext::loadBlitShaders()
-{
-  cout << "loading blit shaders" << endl;
-  string blitFragmentShaderSource = R"--(
-  in vec2 texCoords;
-  out vec4 fragColor;
-  uniform sampler2D blitTex;
-  void main()
-  {
-      fragColor = texture(blitTex, texCoords.xy);
-  }
-  )--";
-  string blitVertexShaderSource = R"--(
-  layout (location = 0)
-  in vec2 vertPos_data;
-  out vec2 texCoords;
-  void main()
-  {
-      gl_Position = vec4(vertPos_data.xy, 0.0, 1.0);
-      texCoords = (vertPos_data.xy + 1.0) * 0.5;
-  }
-  )--";
-  Shader blitVertexShader(
-      GL_VERTEX_SHADER,
-      (opengl_version_header + blitVertexShaderSource).c_str());
-  Shader blitFragmentShader(
-      GL_FRAGMENT_SHADER,
-      (opengl_version_header + blitFragmentShaderSource).c_str());
-
-  blitShader = new ShaderProgram({blitVertexShader, blitFragmentShader});
-}
-
 void HoloPlayContext::loadLightFieldShaders()
 {
   cout << "loading quilt shader" << endl;
@@ -675,66 +645,6 @@ void HoloPlayContext::loadCalibrationIntoShader()
   glCheckError(__FILE__, __LINE__);
 }
 
-void HoloPlayContext::setupViewTextureAndFrameBuffer(
-    unsigned int &viewTexture,
-    unsigned int &framebuffer,
-    unsigned int &textureColorbuffer,
-    unsigned int &rbo)
-{
-  glGenTextures(1, &viewTexture);
-  glBindTexture(GL_TEXTURE_2D, viewTexture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, win_w, win_h, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, NULL);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, win_w, win_h, 0,
-               GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
-
-  // generate framebuffer
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-  // create a color attachment texture
-  glGenTextures(1, &textureColorbuffer);
-  glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, win_w, win_h, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glBindTexture(GL_TEXTURE_2D, 0);
-
-  // attach it to currently bound framebuffer object
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         textureColorbuffer, 0);
-
-  glGenRenderbuffers(1, &rbo);
-  glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, win_w,
-                        win_h); // use a single renderbuffer object for both a
-                                // depth AND stencil buffer.
-  glBindRenderbuffer(GL_RENDERBUFFER, 0);
-  // attach the renderbuffer object to the depth and stencil attachment of the
-  // framebuffer
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                            GL_RENDERBUFFER, rbo); // now actually attach it
-
-  // now that we actually created the framebuffer and added all attachments we
-  // want to check if it is actually complete 
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    std::cout << "[ERROR] Framebuffer is not complete!" << std::endl;
-  }
-  else
-  {
-    // attach texture to the framebuffer
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                           GL_TEXTURE_2D, viewTexture, 0);
-    glCheckError(__FILE__, __LINE__);
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 // release function
 // =========================================================
 void HoloPlayContext::release()
@@ -763,7 +673,7 @@ void HoloPlayContext::setupVirtualCameraForView(int currentViewIndex,
   float cameraDistance = -cameraSize / tan(fov / 2.0f);
 
   float offsetAngle =
-      (currentViewIndex / (qs_totalViews - 1.0f) - 0.5f) *
+      (float(currentViewIndex) / (float(qs_totalViews) - 1.0f) - 0.5f) *
       glm::radians(
           viewCone); // start at -viewCone * 0.5 and go up to viewCone * 0.5
 
@@ -781,41 +691,6 @@ void HoloPlayContext::setupVirtualCameraForView(int currentViewIndex,
   projectionMatrix = glm::perspective(fov, aspectRatio, 0.1f, 100.0f);
   // modify the projection matrix, relative to the camera size and aspect ratio
   projectionMatrix[2][0] += offset / (cameraSize * aspectRatio);
-}
-
-// copy view to quilt
-void HoloPlayContext::copyViewToQuilt(int view)
-{
-  // framebuffer
-  glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-
-  // save the viewport
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT, viewport);
-
-  int qs_viewWidth = qs_width / qs_columns;
-  int qs_viewHeight = qs_height / qs_rows;
-  int x = (view % qs_columns) * qs_viewWidth;
-  int y = (view / qs_columns) * qs_viewHeight;
-
-  glViewport(x, y, qs_viewWidth, qs_viewHeight);
-  glScissor(x, y, qs_viewWidth, qs_viewHeight);
-
-  // vao
-  glBindVertexArray(VAO);
-
-  // use the shader and draw
-  blitShader->use();
-  glDrawArrays(GL_TRIANGLES, 0, 6);
-
-  // reset framebuffer
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  // reset viewport
-  glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-  glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
-  glBindVertexArray(0);
-  blitShader->unuse();
 }
 
 void HoloPlayContext::drawLightField()

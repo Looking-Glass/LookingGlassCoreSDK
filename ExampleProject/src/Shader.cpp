@@ -2,6 +2,10 @@
 //All rights reserved.
 //Unauthorized copying or distribution of this file, and the source code contained herein, is strictly prohibited.
 
+#ifdef WIN32
+#pragma warning(disable : 4464 4820 4514 5045 4201 5039 4061 4710 4458 4626 5027 4365 4312)
+#endif
+
 #include "Shader.hpp"
 
 #include <cstdlib>
@@ -10,6 +14,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <string>
 
 using namespace std;
 using namespace glm;
@@ -90,8 +95,10 @@ void Shader::checkCompileError(std::string file)
     GLsizei logsize = 0;
     glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &logsize);
 
-    char *log = new char[logsize + 1];
-    glGetShaderInfoLog(handle, logsize, &logsize, log);
+    string log;
+    log.resize(size_t(logsize + 1));
+   
+    glGetShaderInfoLog(handle, logsize, &logsize, &log[0]);
 
     cout << "[Error] compilation error: " << file << endl;
     cout << log << endl;
@@ -134,8 +141,10 @@ void ShaderProgram::link()
     GLsizei logsize = 0;
     glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logsize);
 
-    char *log = new char[logsize];
-    glGetProgramInfoLog(handle, logsize, &logsize, log);
+    string log;
+    log.resize(size_t(logsize + 1));
+
+    glGetProgramInfoLog(handle, logsize, &logsize, &log[0]);
 
     cout << log << endl;
   }

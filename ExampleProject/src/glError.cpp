@@ -6,6 +6,10 @@
  *      * MIT
  */
 
+#ifdef WIN32
+#pragma warning(disable : 4464 4820 4514 5045 4201 5039 4061 4710 4458 4626 5027 4668)
+#endif
+
 #include "glError.hpp"
 
 #include <GL/glew.h>
