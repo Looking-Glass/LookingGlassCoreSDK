@@ -33,7 +33,11 @@
 
 #ifndef IMPORT_DECL
 #ifdef _WIN32
+#ifdef HPC_STATIC
+#define IMPORT_DECL 
+#else
 #define IMPORT_DECL __declspec(dllimport)
+#endif
 #else
 #define IMPORT_DECL
 #endif

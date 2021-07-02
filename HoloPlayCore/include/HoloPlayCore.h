@@ -43,7 +43,11 @@
 
 #ifndef IMPORT_DECL
 #ifdef _WIN32
+#ifdef HPC_STATIC
+#define IMPORT_DECL 
+#else
 #define IMPORT_DECL __declspec(dllimport)
+#endif
 #else
 #define IMPORT_DECL
 #endif
@@ -298,6 +302,46 @@ extern "C"
          Returns: display subpixel size.
     */
     IMPORT_DECL float hpc_GetDevicePropertySubp(int dev_index);
+
+    /*
+        hpc_GetDevicePropertyQuiltX
+
+         Returns: recommended horizontal quilt texture resolution.
+         Note: Only works with Holoplay Service 1.2.0 or later; Holoplay Core 0.1.2 or later
+    */
+    IMPORT_DECL int hpc_GetDevicePropertyQuiltX(int dev_index);
+
+    /*
+        hpc_GetDevicePropertyQuiltY
+
+         Returns: recommended vertical quilt texture resolution.
+         Note: Only works with Holoplay Service 1.2.0 or later; Holoplay Core 0.1.2 or later
+    */
+    IMPORT_DECL int hpc_GetDevicePropertyQuiltY(int dev_index);
+
+    /*
+        hpc_GetDevicePropertyTileX
+
+         Returns: recommended horizontal quilt tiling dimension
+         Note: Only works with Holoplay Service 1.2.0 or later; Holoplay Core 0.1.2 or later
+    */
+    IMPORT_DECL int hpc_GetDevicePropertyTileX(int dev_index);
+
+    /*
+        hpc_GetDevicePropertyTileY
+
+         Returns: recommended vertical quilt tiling dimension
+         Note: Only works with Holoplay Service 1.2.0 or later; Holoplay Core 0.1.2 or later
+    */
+    IMPORT_DECL int hpc_GetDevicePropertyTileY(int dev_index);
+
+    /*
+        hpc_GetDevicePropertyQuiltAspect
+
+         Returns: recommended quilt aspect ratio.
+         Note: Only works with Holoplay Service 1.2.0 or later; Holoplay Core 0.1.2 or later
+    */
+    IMPORT_DECL float hpc_GetDevicePropertyQuiltAspect(int dev_index);
 #ifdef __cplusplus
 }
 #endif

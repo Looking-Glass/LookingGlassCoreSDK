@@ -14,7 +14,7 @@
     and must be queried using functions declared in HoloPlayCore.h. The second set
     (quilt settings) must be provided by the developer and depends on the desired
     resolution of their multiview render.
-	
+
     By using, copying, or modifying this code in any way, you agree to the terms of
     https://github.com/Looking-Glass/HoloPlayCoreSDK/blob/master/LICENSE.txt
 
@@ -62,9 +62,8 @@ uniform sampler2D screenTex;\n\
 vec2 texArr(vec3 uvz)\n\
 {\n\
 	// decide which section to take from based on the z.\n\
-	float z = floor(uvz.z * tile.z);\n\
-	float x = (mod(z, tile.x) + uvz.x) / tile.x;\n\
-	float y = (floor(z / tile.x) + uvz.y) / tile.y;\n\
+	float x = (mod(uvz.z, tile.x) + uvz.x) / tile.x;\n\
+	float y = (floor(uvz.z / tile.x) + uvz.y) / tile.y;\n\
 	return vec2(x, y) * viewPortion.xy;\n\
 }\n\
 \n\
@@ -97,7 +96,15 @@ void main()\n\
 			nuv.z = (texCoords.x + i * subp + texCoords.y * tilt) * pitch - center;\n\
 			nuv.z = mod(nuv.z + ceil(abs(nuv.z)), 1.0);\n\
 			nuv.z *= invert;\n\
-			rgb[i] = texture(screenTex, texArr(nuv));\n\
+			nuv.z *= tile.z;\n\
+			vec3 coords1 = nuv;\n\
+			vec3 coords2 = nuv;\n\
+			coords1.y = coords2.y = clamp(nuv.y, 0.005, 0.995);\n\
+			coords1.z = floor(nuv.z);\n\
+			coords2.z = ceil(nuv.z);\n\
+			vec4 col1 = texture(screenTex, texArr(coords1));\n\
+			vec4 col2 = texture(screenTex, texArr(coords2));\n\
+			rgb[i] = mix(col1, col2, nuv.z - coords1.z);\n\
 		}\n\
 		fragColor = vec4(rgb[ri].r, rgb[1].g, rgb[bi].b, 1.0);\n\
 	}\n\
