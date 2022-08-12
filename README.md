@@ -1,13 +1,11 @@
-# HoloPlay Core
+# Looking Glass Core
 
-The HoloPlay Core SDK unlocks the ability to integrate your existing 3D software with Looking Glass displays, making the Looking Glass a holographic second monitor.
+The Looking Glass Core SDK (formerly HoloPlay Core) unlocks the ability to integrate your existing 3D software with Looking Glass displays, making the Looking Glass a holographic second monitor.
 
 The SDK comes in two different flavors:
 
 - Native dynamic libraries for Windows, Mac, and Linux (contained in this repository)
 - JavaScript for web or Node development, which you can [access here](https://github.com/Looking-Glass/holoplaycore.js)
-
-Check out how [Schrödinger](https://lookingglassfactory.com/schrodinger) used the HoloPlay Core SDK to improve their workflow.
 
 ## Prerequisites 
 
@@ -18,13 +16,11 @@ Developers can use any rendering backend (DirectX, OpenGL, Metal, Vulkan) and an
 - Render multiple views to a texture
 - Apply a shader to the texture
 
-Also, your end user must have [HoloPlay Service](https://lookingglassfactory.com/software/holoplay-service) installed on their machine.
-
-**Note**: JavaScript developers can use HoloPlay.js to rely on our three.js integration to handle the above.
+Also, your end user must have [Looking Glass Bridge](https://lookingglassfactory.com/software/holoplay-service) installed on their machine.
 
 ## How It Works 
 
-The HoloPlay Core SDK provides your application all the information it needs to draw to the Looking Glass, including window information and calibration.
+The Looking Glass Core SDK provides your application all the information it needs to draw to the Looking Glass, including window information and calibration.
 
 #### **Why Window Information is Important**
 
@@ -36,20 +32,20 @@ Each Looking Glass has its own device-specific calibration, read over USB. Your 
 
 #### **All Together**
 
-HoloPlay Core (the graphics library integrated into your application) gets this information   by providing an API endpoint to request information from HoloPlay Service (a persistent driver-like service that is installed on the user’s machine). HoloPlay Core uses this information to draw your 3D scene to the Looking Glass. 
+Looking Glass Core (the graphics library integrated into your application) gets this information by providing an API endpoint to request information from Looking Glass Bridge (a persistent driver-like service that is installed on the user’s machine). Looking Glass Core uses this information to draw your 3D scene to the Looking Glass. 
 
 ## Guides
 
 These reference documents cover some of the underlying logic inside the SDK:
 
-- [Camera](https://docs.lookingglassfactory.com/HoloPlayCore/guides/camera/)
-- [Quilt](https://docs.lookingglassfactory.com/HoloPlayCore/guides/quilt/)
+- [Camera](https://docs.lookingglassfactory.com/keyconcepts/camera)
+- [Quilt](https://docs.lookingglassfactory.com/keyconcepts/quilts)
 
-An example OpenGL project is distributed as part of the HoloPlay Core SDK to demonstrate how to move the camera and render to a texture in the appropriate format.
+An example OpenGL project is distributed as part of the Looking Glass Core SDK to demonstrate how to move the camera and render to a texture in the appropriate format.
 
-To learn more about the Looking Glass and how it works, click [here](https://docs.lookingglassfactory.com/Appendix/how-it-works/). 
+To learn more about the Looking Glass and how it works, click [here](https://docs.lookingglassfactory.com/keyconcepts/how-it-works). 
 
 ## Questions
 
-Email us at [support@lookingglassfactory.com](mailto:support@lookingglassfactory.com) if you have any further questions about how you can integrate HoloPlay Core into your software.
+Email us at [support@lookingglassfactory.com](mailto:support@lookingglassfactory.com) if you have any further questions about how you can integrate Looking Glass Core into your software.
 
