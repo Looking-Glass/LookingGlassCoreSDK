@@ -2,6 +2,13 @@
 cmake_minimum_required (VERSION 3.1)
 project (holoplay-core-example)
 
+# common ifdefs
+if(UNIX AND NOT APPLE)
+  set(LINUX TRUE)
+endif()
+
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
+
 set(HOLOPLAY_CORE_BASE_PATH "${PROJECT_SOURCE_DIR}/../HoloPlayCore")
 
 # The main executable
@@ -33,7 +40,9 @@ target_link_libraries(main PRIVATE libglew_static)
 add_subdirectory(lib/glm EXCLUDE_FROM_ALL)
 target_link_libraries(main PRIVATE glm)
 
-set(DLL_DIR "linux")
+if (LINUX)
+  set(DLL_DIR "linux")
+endif(LINUX)
 
 if(WIN32)
   set(DLL_DIR "Win64")
@@ -50,6 +59,9 @@ endif(APPLE)
 
 # holoplaycore
 target_include_directories(main PRIVATE "${HOLOPLAY_CORE_BASE_PATH}/include")
-find_library(HOLOPLAY_CORE_LOCATION HoloPlayCore PATHS "${HOLOPLAY_CORE_BASE_PATH}/dylib" PATH_SUFFIXES ${DLL_DIR})
-target_link_libraries(main PRIVATE ${HOLOPLAY_CORE_LOCATION})
-
+if(LINUX)
+  target_link_directories(main PRIVATE "${HOLOPLAY_CORE_BASE_PATH}/dylib/${DLL_DIR}")
+  target_link_libraries(main PRIVATE LookingGlassCore)
+else()
+  find_library(HOLOPLAY_CORE_LOCATION HoloPlayCore PATHS "${HOLOPLAY_CORE_BASE_PATH}/dylib" PATH_SUFFIXES ${DLL_DIR})
+endif(LINUX)
