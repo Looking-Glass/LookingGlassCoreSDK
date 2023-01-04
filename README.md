@@ -16,7 +16,7 @@ Developers can use any rendering backend (DirectX, OpenGL, Metal, Vulkan) and an
 - Render multiple views to a texture
 - Apply a shader to the texture
 
-Also, your end user must have [Looking Glass Bridge](https://lookingglassfactory.com/software/holoplay-service) installed on their machine.
+Also, your end user must have [Looking Glass Bridge](https://lookingglassfactory.com/software/looking-glass-bridge) installed on their machine.
 
 ## How It Works 
 
