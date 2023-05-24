@@ -1,6 +1,6 @@
 HoloPlay Core Example Project
 ===
-This is an example project that shows how to use [HoloPlay Core](https://docs.lookingglassfactory.com/HoloPlayCore/) to build a crossplatform holographic renderer for a Looking Glass display. It is based on [OpenGL CMake Skeleton](https://github.com/ArthurSonzogni/OpenGL_CMake_Skeleton) by Arthur Sonzogni, and depends on [GLFW](https://github.com/glfw/glfw/), [GLEW](https://github.com/omniavinco/glew-cmake/), and [glm](https://github.com/g-truc/glm).
+This is an example project that shows how to use [Looking Glass Core](https://docs.lookingglassfactory.com/core/core-sdk) to build a crossplatform holographic renderer for a Looking Glass display. It is based on [OpenGL CMake Skeleton](https://github.com/ArthurSonzogni/OpenGL_CMake_Skeleton) by Arthur Sonzogni, and depends on [GLFW](https://github.com/glfw/glfw/), [GLEW](https://github.com/omniavinco/glew-cmake/), and [glm](https://github.com/g-truc/glm).
 
 # Table of Contents
  * [Setup](#setup)
@@ -20,22 +20,20 @@ This is an example project that shows how to use [HoloPlay Core](https://docs.lo
       * [Set Up Virtual Camera](#set-up-virtual-camera--holoplaycontextsetupvirtualcameraforview)
     * [More References](#more-references)
  * [Project Structure](#project-structure)
- * [Making Use of HoloPlay Core](#making-use-of-holoplay-core)
+ * [Making Use of Looking Glass Core](#making-use-of-looking-glass-core)
    * [Setup and Teardown](#setup-and-teardown)
    * [Shader related](#shader-related)
    * [Monitor Coordinates](#monitor-coordinates)
    * [View cone](#view-cone)
    * [Debug mode](#debug-mode)
    * [Other info](#other-info)
- * [Dependencies](#dependencies)
- * [Sources](#sources)
 
 # Setup
 
 ## Clone with submodules
 
 ```bash
-git clone --recursive https://github.com/Looking-Glass/HoloPlayCoreSDK.git
+git clone --recursive https://github.com/Looking-Glass/LookingGlassCoreSDK.git
 ```
 
 If you already have the repository and didn't use the `--recursive` option, you can type:
@@ -125,11 +123,11 @@ Scroll to zoom in and out
     - Verify if the window is full-screen and borderless. Some graphics libraries may create windows with invisible decorations. If your hologram appears 'miscalibrated', you may wish to use a tool like [NirSoft WinLister](https://www.nirsoft.net/utils/winlister.html) (Win32) or [xwininfo](https://linux.die.net/man/1/xwininfo) (Linux) to verify that your window has been opened with the correct properties. 
 
 - If the app aborts or shuts down immediately:
-  1. Verify that [HoloPlay Service](look.glass/holoplayservice) is installed and running. 
-     - The HoloPlay Service icon should display in the taskbar, if running properly. 
+  1. Verify that [Looking Glass Bridge](https://lookingglassfactory.com/software/looking-glass-bridge) is installed and running. 
+     - The Looking Glass Bridge icon should display in the taskbar, if running properly. 
      - If it is not installed, install it, and if it is not displaying in the taskbar, run it manually.
   2. Right-click on the taskbar icon. This opens a menu that shows information about all your connected Looking Glass displays. Make sure it detects at least one of your devices and its calibration. 
-     -  If not, right-click on the icon to restart HoloPlay Service until it detects both the device and its calibration. Double check if your Looking Glass is plugged in a USB3.0 port. If you have any problems achieving this, please [email us](https://lookingglassfactory.com/contact) or report the bug in our [forum](https://forum.lookingglassfactory.com/?_ga=2.171851938.388081720.1583171731-2126388208.1558451460) or [Discord server](https://discord.gg/ZW87Y4m).
+     -  If not, right-click on the icon to restart Looking Glass Bridge until it detects both the device and its calibration. Double check if your Looking Glass is plugged in a USB3.0 port. If you have any problems achieving this, please [email us](https://lookingglassfactory.com/contact) or report the bug in our [forum](https://forum.lookingglassfactory.com/?_ga=2.171851938.388081720.1583171731-2126388208.1558451460) or [Discord server](https://discord.gg/ZW87Y4m).
 
 # Rendering Holograms with the Looking Glass
 
@@ -140,11 +138,11 @@ The simplest way to create these views is to render a 3D scene 45 times per fram
 
 To show the views simultaneously, we use a **light field shader** to scramble the pixels in the quilt, making it appear as a 3D hologram when viewed through the Looking Glass.
 
-Each Looking Glass display has a unique set of **calibration** values, which describe its optical properties. These are converted to **uniforms** (values passed from the CPU to the GPU at runtime) for the light field shader. Calibration values are read over USB by **HoloPlay Service** and could be accessed via HoloPlay Core. 
+Each Looking Glass display has a unique set of **calibration** values, which describe its optical properties. These are converted to **uniforms** (values passed from the CPU to the GPU at runtime) for the light field shader. Calibration values are read over USB by **Looking Glass Bridge** and could be accessed via Looking Glass Core. 
 
 For the calibration to apply correctly, the rendering context must be perfectly aligned to the display. Your application can achieve this by creating a fullscreen, undecorated window. In this example we will use the GLFW library to create our window.
 
-HoloPlay Core provides the source code for the light field shader as well as an interface to access the calibration values and exact window positions for each connected Looking Glass. 
+Looking Glass Core provides the source code for the light field shader as well as an interface to access the calibration values and exact window positions for each connected Looking Glass. 
 
 This has been a brief overview of a complex process. For a more in-depth explanation of quilts, light fields, virtual camera setup, and the principles behind Looking Glass technology, please check out [More References](#more-references).
 
@@ -166,7 +164,7 @@ To recap, the key steps to display a hologram are:
 
 #### Initialization &#8594; ``HoloPlayContext::HoloPlayContext()``
 
- 1. Open connection to **HoloPlay Service**; retrieve window and calibration parameters &#8594; ``HoloPlayContext::HoloPlayContext()``
+ 1. Open connection to **Looking Glass Bridge**; retrieve window and calibration parameters &#8594; ``HoloPlayContext::HoloPlayContext()``
  2. Open a **full-screen window** on the Looking Glass &#8594; ``HoloPlayContext::openWindowOnLKG()``
  3. Compile **blit shaders** &#8594; ``HoloPlayContext::loadBlitShaders()``
  4. Create and configure **light field** shader:
@@ -204,19 +202,18 @@ void SampleScene::renderScene()
  1. Free the ``HoloPlayContext`` objects created &#8594; `HoloPlayContext::release()`
  2. Release the connection to HoloPlay Service &#8594; `hpc_closeApp()`
 
-## Set Up Virtual Camera 
-&#8594; ``HoloPlayContext::setupVirtualCameraForView()``
+## Set Up Virtual Camera &#8594; ``HoloPlayContext::setupVirtualCameraForView()``
 
  Here's an illustration of the way the camera position changes each frame:
 
 ![alt text][view-cone]
 
-[view-cone]:https://docs.lookingglassfactory.com/HoloPlayCore/images/viewcone.png "camera moves on the red track"
+[view-cone]:https://2178864959-files.gitbook.io/~/files/v0/b/gitbook-legacy-files/o/assets%2F-MWj8g-jOrSs315lrZFz%2Fsync%2F94ff2289db3b8e082f403a3a9330cb79495a3d78.png?generation=1616772665943629&alt=media "camera moves on the red track"
 
 The projection matrix also shifts between views. Here is an animation showing those changes: 
  ![alt text][quilt_format2]
 
-[quilt_format2]:https://docs.lookingglassfactory.com/Appendix/images/multiplex.gif "quilt - top-down view of Looking Glass - single view"
+[quilt_format2]:https://2178864959-files.gitbook.io/~/files/v0/b/gitbook-legacy-files/o/assets%2F-MWj8g-jOrSs315lrZFz%2Fsync%2F26fba6f986d557c5b6a6b5e511d6a043dbb1b52f.gif?generation=1616772667694314&alt=media "quilt - top-down view of Looking Glass - single view"
 
 So we calculate the position and projection offsets and then change the projection matrix:
 ```c++
@@ -252,12 +249,12 @@ void HoloPlayContext::setupVirtualCameraForView(int currentViewIndex,
   projectionMatrix[2][0] += offset / (cameraSize * aspectRatio);
 }
 ```
-If you want to further understand how these equations work, check out [Offset](https://docs.lookingglassfactory.com/HoloPlayCore/guides/camera/#offset).
+If you want to further understand how these equations work, check out [Offset](https://docs.lookingglassfactory.com/keyconcepts/camera#offset).
 
 ## More References
-  - [How the Looking Glass Works](https://docs.lookingglassfactory.com/Appendix/how-it-works/)
-  - More about [Quilts](https://docs.lookingglassfactory.com/HoloPlayCore/HoloPlayCore-SDK/guides/quilt/)
-  - More about [Camera Setup](https://docs.lookingglassfactory.com/HoloPlayCore/HoloPlayCore-SDK/guides/camera/)
+  - [How the Looking Glass Works](https://docs.lookingglassfactory.com/keyconcepts/how-it-works)
+  - More about [Quilts](https://docs.lookingglassfactory.com/keyconcepts/quilts)
+  - More about [Camera Setup](https://docs.lookingglassfactory.com/keyconcepts/camera)
 
 
 # Project Structure
