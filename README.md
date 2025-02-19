@@ -1,3 +1,7 @@
+**Note that this SDK is now out of date.**
+
+This SDK does not have support for the lastest Looking Glass devices (Looking Glass Go, Looking Glass 16" Spatial Displays, and Looking Glass 32" Spatial Displays). **[Please use our new Bridge SDK instead](https://github.com/Looking-Glass/bridge-sdk-samples).** You can see documentation on our Bridge SDK [here](https://docs.lookingglassfactory.com/core/looking-glass-bridge-sdk) and a migration guide from Looking Glass Core [here](https://docs.lookingglassfactory.com/core/looking-glass-core-migration-guide).
+
 # Looking Glass Core
 
 The Looking Glass Core SDK (formerly HoloPlay Core) unlocks the ability to integrate your existing 3D software with Looking Glass displays, making the Looking Glass a holographic second monitor.
